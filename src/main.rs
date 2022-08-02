@@ -3,7 +3,7 @@ use crate::words::WORDS;
 
 use std::error::Error;
 use std::io::{self, Write};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 fn main() {
     if let Err(error) = run() {
@@ -43,15 +43,23 @@ type WordMap = HashMap<&'static str, Vec<&'static str>>;
 // Spinner while loading
 
 fn solve(hashmap: WordMap, starting_word: &str, ending_word: &str) -> Vec<&'static str> {
-    let mut solution = Vec::new();
-    let mut current_word = starting_word;
 
-    loop {
-        let possible_words = hashmap.get(current_word).unwrap();
-        
+}
+
+fn bread_first_search(hashmap: WordMap, starting_word: &str, ending_word: &str) {
+    let mut previous_word = HashMap::new();
+    let mut queue = VecDeque::new();
+    queue.push_back(starting_word);
+    while !queue.is_empty() {
+        let new_word = queue.pop_front().unwrap();
+        if new_word == ending_word {
+            //
+        }
+
+        for word in hashmap.get(new_word).unwrap() {
+            queue.push_back(word);
+        }
     }
-
-    solution
 }
 
 fn precompute() -> WordMap {
