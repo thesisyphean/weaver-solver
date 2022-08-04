@@ -5,13 +5,26 @@ use std::error::Error;
 use std::io::{self, Write};
 use std::collections::{HashMap, VecDeque};
 
-fn main() {
-    if let Err(error) = run() {
-        eprintln!("Error: {}", error);
-    }
+use clap::Parser;
+use spinners::{Spinner, Spinners};
+
+/// A program to solve weaver problems
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    /// The word to start at
+    #[clap(value_parser)]
+    start: String,
+
+    /// The word to end at
+    #[clap(value_parser)]
+    end: String,
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
+    let args = Args::parse();
+    println!("{:?}", args);
+
     println!("Welcome to Weaver Solver!");
 
     let mut input = String::new();
@@ -26,40 +39,69 @@ fn run() -> Result<(), Box<dyn Error>> {
     io::stdin().read_line(&mut input)?;
     let ending_word = input.trim().to_string();
 
-    println!("Precomputing word matches.");
+    let mut spinner = Spinner::new(Spinners::Line, "Precomputing words.".into());
     let hashmap = precompute();
+    spinner.stop();
 
-    println!("Solving weaver.");
-    let result = solve(hashmap, &starting_word, &ending_word);
-    println!("Solution: {:?}", result);
+    let mut spinner = Spinner::new(Spinners::Line, "Solving weaver.".into());
+    //let result = solve(hashmap, starting_word.clone(), ending_word.clone());
+    let test = breadth_first_search(hashmap, starting_word, ending_word);
+    spinner.stop();
+    println!("{:?}", test);
+
+    // print!("{} -> ", starting_word);
+    // for word in result {
+    //     print!("{} -> ", word);
+    // }
+    // println!("{}", ending_word);
 
     Ok(())
 }
 
 type WordMap = HashMap<&'static str, Vec<&'static str>>;
+    
+fn solve(hashmap: WordMap, starting_word: String, ending_word: String) -> Vec<&'static str> {
+    let map = breadth_first_search(hashmap, starting_word.clone(), ending_word.clone());
+    let mut solution = Vec::new();
 
-// Args
-// Colour
-// Spinner while loading
+    let mut current_word: &str = &ending_word;
+    loop {
+        let next_word = *map.get(&current_word).unwrap();
+        solution.push(next_word);
+        current_word = next_word;
 
-fn solve(hashmap: WordMap, starting_word: &str, ending_word: &str) -> Vec<&'static str> {
-
-}
-
-fn bread_first_search(hashmap: WordMap, starting_word: &str, ending_word: &str) {
-    let mut previous_word = HashMap::new();
-    let mut queue = VecDeque::new();
-    queue.push_back(starting_word);
-    while !queue.is_empty() {
-        let new_word = queue.pop_front().unwrap();
-        if new_word == ending_word {
-            //
-        }
-
-        for word in hashmap.get(new_word).unwrap() {
-            queue.push_back(word);
+        if current_word == "starting_word" {
+            break;
         }
     }
+
+    solution
+}
+
+fn breadth_first_search<'a>(hashmap: WordMap, starting_word: String, ending_word: String)
+    -> HashMap<&'static str, &'static str> {
+    let mut previous_word = HashMap::new();
+    let mut queue: VecDeque<&str> = VecDeque::new();
+
+    let starting_word: &str = &starting_word;
+    for &word in hashmap.get(&starting_word).unwrap() {
+        queue.push_back(word);
+        previous_word.insert(word, "starting_word");
+    }
+
+    while !queue.is_empty() {
+        let new_word = queue.pop_front().unwrap();
+        if new_word == &ending_word {
+            return previous_word;
+        }
+
+        for &word in hashmap.get(new_word).unwrap() {
+            queue.push_back(word);
+            previous_word.insert(word, new_word);
+        }
+    }
+
+    unreachable!();
 }
 
 fn precompute() -> WordMap {
