@@ -6,6 +6,9 @@ use std::collections::{HashMap, VecDeque};
 
 use clap::Parser;
 use spinners::{Spinner, Spinners};
+use colored::Colorize;
+
+type Graph = HashMap<usize, Vec<usize>>;
 
 /// A program to solve weaver problems
 #[derive(Parser, Debug)]
@@ -39,22 +42,30 @@ fn main() -> Result<(), Box<dyn Error>> {
     let start = WORDS.iter().position(|&w| w == &args.start).unwrap();
     let end = WORDS.iter().position(|&w| w == &args.end).unwrap();
 
-    println!("Welcome to Weaver Solver!");
+    println!("{}", "Welcome to Weaver Solver!".blue().bold());
 
-    let mut spinner = Spinner::new(Spinners::Line, "Precomputing words.".into());
+    let mut spinner = Spinner::new(Spinners::Line, "Precomputing graph.".into());
     let hashmap = generate_graph();
-    spinner.stop();
+    spinner.stop_with_message("Finished precomputing graph.".into());
 
     let mut spinner = Spinner::new(Spinners::Line, "Solving weaver.".into());
     let result = breadth_first_search(hashmap, start, end);
-    let solution = solve(result, start, end);
-    spinner.stop();
+    spinner.stop_with_message("Finished solving weaver.".into());
 
-    print!("{} -> ", args.start);
-    for word in solution {
-        print!("{} -> ", word);
+    if let Some(result) = result {
+        let mut solution = solve(result, start, end);
+        solution.insert(0, &args.start);
+
+        print!("{}", "Solution: ".green().bold());
+        for word in &solution {
+            print!("{}{}", word, " -> ".green().bold());
+        }
+        println!("{}", args.end);
+
+        println!("{}{}", "Optimal length: ".green().bold(), solution.len());
+    } else {
+        println!("{}", "No solution.".red().bold());
     }
-    println!("{}", args.end);
 
     Ok(())
 }
@@ -77,7 +88,7 @@ fn solve(pred: Vec<usize>, start: usize, end: usize) -> Vec<&'static str> {
     solution
 }
 
-fn breadth_first_search(graph: HashMap<usize, Vec<usize>>, start: usize, end: usize) -> Vec<usize> {
+fn breadth_first_search(graph: Graph, start: usize, end: usize) -> Option<Vec<usize>> {
     let mut queue = VecDeque::new();
     let mut visited: Vec<_> = (0..WORDS.len()).map(|_| false).collect();
     let mut pred: Vec<_> = (0..WORDS.len()).map(|_| 0).collect();
@@ -96,16 +107,16 @@ fn breadth_first_search(graph: HashMap<usize, Vec<usize>>, start: usize, end: us
                 queue.push_back(adj_word);
 
                 if adj_word == end {
-                    return pred;
+                    return Some(pred);
                 }
             }
         }
     }
 
-    unreachable!();
+    None
 }
 
-fn generate_graph() -> HashMap<usize, Vec<usize>> {
+fn generate_graph() -> Graph {
     let mut graph = HashMap::new();
 
     for i in 0..WORDS.len() {
