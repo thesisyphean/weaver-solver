@@ -42,6 +42,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let start = WORDS.iter().position(|&w| w == &args.start).unwrap();
     let end = WORDS.iter().position(|&w| w == &args.end).unwrap();
 
+    colored::control::set_virtual_terminal(true).unwrap();
     println!("{}", "Welcome to Weaver Solver!".blue().bold());
 
     let mut spinner = Spinner::new(Spinners::Line, "Precomputing graph.".into());
