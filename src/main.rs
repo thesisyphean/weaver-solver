@@ -39,10 +39,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut args = Args::parse();
     args.start.make_ascii_lowercase();
     args.end.make_ascii_lowercase();
-    let start = WORDS.iter().position(|&w| w == &args.start).unwrap();
-    let end = WORDS.iter().position(|&w| w == &args.end).unwrap();
+    let start = WORDS.iter().position(|&w| w == &args.start)
+        .ok_or("Start word not found.")?;
+    let end = WORDS.iter().position(|&w| w == &args.end)
+        .ok_or("End word not found.")?;
 
-    colored::control::set_virtual_terminal(true).unwrap();
+    // TODO: This is a new error (possibly due to not using the nightly compiler?)
+    // colored::control::set_virtual_terminal(true)?;
     println!("{}", "Welcome to Weaver Solver!".blue().bold());
 
     let mut spinner = Spinner::new(Spinners::Line, "Precomputing graph.".into());
