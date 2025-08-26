@@ -10,15 +10,15 @@ use colored::Colorize;
 
 type Graph = HashMap<usize, Vec<usize>>;
 
-/// A program to solve weaver problems
+/// A program to solve Weaver problems (a word ladder game by wordwormdormdork)
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(about, long_about = None)]
 struct Args {
-    /// The word to start at
+    /// The problem's starting word
     #[clap(value_parser = valid_word)]
     start: String,
 
-    /// The word to end at
+    /// The problem's ending word
     #[clap(value_parser = valid_word)]
     end: String,
 }
@@ -43,10 +43,6 @@ fn main() -> Result<(), Box<dyn Error>> {
         .ok_or("Start word not found.")?;
     let end = WORDS.iter().position(|&w| w == &args.end)
         .ok_or("End word not found.")?;
-
-    // TODO: This is a new error (possibly due to not using the nightly compiler?)
-    // colored::control::set_virtual_terminal(true)?;
-    println!("{}", "Welcome to Weaver Solver!".blue().bold());
 
     let mut spinner = Spinner::new(Spinners::Line, "Precomputing graph.".into());
     let hashmap = generate_graph();
